@@ -3,547 +3,569 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Add New Shop</title>
+<title>Shop Manager</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 
+<!-- Firebase SDK (v10 modular) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyAspwVuRlWUGoGBSGXbo3YatPwOYuNAFF8",
+    authDomain:        "gudupsales.firebaseapp.com",
+    projectId:         "gudupsales",
+    storageBucket:     "gudupsales.firebasestorage.app",
+    messagingSenderId: "1098041683012",
+    appId:             "1:1098041683012:web:746fdd7d4490da98152011",
+    measurementId:     "G-EMZ80ZPTQG"
+  };
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+    window._db  = db;
+    window._col = collection;
+    window._add = addDoc;
+    window._get = getDocs;
+    window._del = deleteDoc;
+    window._ref = doc;
+    window._ts  = serverTimestamp;
+    window._q   = query;
+    window._ob  = orderBy;
+    window._fbOk = true;
+    document.dispatchEvent(new Event("fb-ready"));
+  } catch(e) {
+    console.warn("Firebase init failed:", e.message);
+  }
+</script>
+
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --g:   #1a6b3a; --gm:  #228b47; --gl:  #e8f5ee;
+  --am:  #d97706; --cr:  #fffdf7; --sd:  #f5f0e8;
+  --ink: #1c1917; --mu:  #78716c; --bd:  #e2dcd5;
+  --wh:  #ffffff; --rd:  #ef4444;
+  --sh:  0 2px 20px rgba(26,107,58,.08); --r: 14px;
+}
+body {
+  font-family:'DM Sans',sans-serif; background:var(--sd);
+  min-height:100vh; padding:24px 16px 60px;
+  background-image:
+    radial-gradient(circle at 20% 10%,rgba(34,139,71,.07) 0%,transparent 55%),
+    radial-gradient(circle at 80% 90%,rgba(217,119,6,.06) 0%,transparent 55%);
+}
+.header { text-align:center; margin-bottom:22px; animation:fd .5s ease both; }
+.badge-top {
+  display:inline-flex; align-items:center; gap:6px; background:var(--gl);
+  color:var(--g); font-size:11px; font-weight:600; letter-spacing:.08em;
+  text-transform:uppercase; border-radius:99px; padding:5px 14px; margin-bottom:10px;
+  border:1px solid rgba(26,107,58,.15);
+}
+.header h1 { font-family:'Playfair Display',serif; font-size:26px; color:var(--ink); }
+.header p  { font-size:13px; color:var(--mu); margin-top:4px; }
 
-  :root {
-    --green:     #1a6b3a;
-    --green-mid: #228b47;
-    --green-lt:  #e8f5ee;
-    --amber:     #d97706;
-    --amber-lt:  #fef3c7;
-    --cream:     #fffdf7;
-    --sand:      #f5f0e8;
-    --ink:       #1c1917;
-    --muted:     #78716c;
-    --border:    #e2dcd5;
-    --white:     #ffffff;
-    --shadow:    0 2px 20px rgba(26,107,58,.08);
-    --radius:    14px;
-  }
+.tabs { display:flex; gap:8px; margin-bottom:18px; animation:fd .4s ease both; }
+.tab  {
+  flex:1; padding:11px; border:1.5px solid var(--bd); border-radius:10px;
+  background:var(--wh); font-family:'DM Sans',sans-serif; font-size:13px;
+  font-weight:600; color:var(--mu); cursor:pointer; transition:all .2s; text-align:center;
+}
+.tab.active { background:var(--g); color:var(--wh); border-color:var(--g); box-shadow:0 4px 14px rgba(26,107,58,.25); }
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--sand);
-    min-height: 100vh;
-    padding: 24px 16px 60px;
-    background-image:
-      radial-gradient(circle at 20% 10%, rgba(34,139,71,.07) 0%, transparent 55%),
-      radial-gradient(circle at 80% 90%, rgba(217,119,6,.06) 0%, transparent 55%);
-  }
+.card {
+  background:var(--wh); border-radius:var(--r); padding:22px 20px; margin-bottom:14px;
+  box-shadow:var(--sh); border:1px solid var(--bd); animation:fu .45s ease both;
+}
+.card:nth-child(2){animation-delay:.05s} .card:nth-child(3){animation-delay:.10s}
+.card:nth-child(4){animation-delay:.15s} .card:nth-child(5){animation-delay:.20s}
+.card:nth-child(6){animation-delay:.25s} .card:nth-child(7){animation-delay:.30s}
+.ct {
+  display:flex; align-items:center; gap:9px; font-size:11px; font-weight:700;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--g);
+  margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--gl);
+}
+.ct .ic { width:28px; height:28px; border-radius:8px; background:var(--gl); display:grid; place-items:center; font-size:14px; }
 
-  /* ── Header ── */
-  .header {
-    text-align: center;
-    margin-bottom: 28px;
-    animation: fadeDown .5s ease both;
-  }
-  .header .badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--green-lt); color: var(--green);
-    font-size: 11px; font-weight: 600; letter-spacing: .08em;
-    text-transform: uppercase; border-radius: 99px;
-    padding: 5px 14px; margin-bottom: 10px;
-    border: 1px solid rgba(26,107,58,.15);
-  }
-  .header h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 28px; color: var(--ink); line-height: 1.2;
-  }
-  .header p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.field { position:relative; margin-bottom:14px; }
+.field input, .field textarea {
+  width:100%; padding:14px 14px 6px; border:1.5px solid var(--bd); border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:14px; color:var(--ink);
+  background:var(--cr); outline:none; transition:border-color .2s,box-shadow .2s;
+}
+.field textarea { padding-top:20px; resize:vertical; min-height:90px; }
+.field label {
+  position:absolute; left:14px; top:50%; transform:translateY(-50%);
+  font-size:13px; color:var(--mu); pointer-events:none; transition:all .2s ease;
+}
+.field textarea ~ label { top:16px; transform:none; }
+.field input:focus,.field textarea:focus { border-color:var(--g); background:var(--wh); box-shadow:0 0 0 3px rgba(26,107,58,.08); }
+.field input:focus ~ label, .field input:not(:placeholder-shown) ~ label,
+.field textarea:focus ~ label, .field textarea:not(:placeholder-shown) ~ label
+{ top:8px; transform:none; font-size:10px; font-weight:600; color:var(--g); letter-spacing:.04em; }
+.field input::placeholder,.field textarea::placeholder { color:transparent; }
+.field input.err,.field textarea.err { border-color:var(--rd)!important; background:#fff5f5; }
 
-  /* ── Cards ── */
-  .card {
-    background: var(--white);
-    border-radius: var(--radius);
-    padding: 22px 20px;
-    margin-bottom: 14px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-    animation: fadeUp .5s ease both;
-  }
-  .card:nth-child(2)  { animation-delay: .05s; }
-  .card:nth-child(3)  { animation-delay: .10s; }
-  .card:nth-child(4)  { animation-delay: .15s; }
-  .card:nth-child(5)  { animation-delay: .20s; }
-  .card:nth-child(6)  { animation-delay: .25s; }
-  .card:nth-child(7)  { animation-delay: .30s; }
+.sl { font-size:11px; font-weight:600; color:var(--mu); letter-spacing:.06em; text-transform:uppercase; margin-bottom:5px; }
+.sw { position:relative; margin-bottom:14px; }
+.sw::after { content:"▾"; position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:14px; color:var(--mu); pointer-events:none; }
+.sw select {
+  width:100%; padding:13px 36px 13px 14px; border:1.5px solid var(--bd); border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:14px; color:var(--ink);
+  background:var(--cr); appearance:none; cursor:pointer; outline:none; transition:border-color .2s;
+}
+.sw select:focus { border-color:var(--g); box-shadow:0 0 0 3px rgba(26,107,58,.08); }
+.ef { margin-bottom:14px; animation:sd .2s ease; }
+.ef input {
+  width:100%; padding:13px 14px; border:1.5px solid var(--bd); border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:14px; color:var(--ink);
+  background:var(--cr); outline:none; transition:border-color .2s;
+}
+.ef input:focus { border-color:var(--am); box-shadow:0 0 0 3px rgba(217,119,6,.08); }
+.hidden { display:none!important; }
+.row { display:flex; gap:10px; } .row>* { flex:1; }
 
-  .card-title {
-    display: flex; align-items: center; gap: 9px;
-    font-size: 12px; font-weight: 600; letter-spacing: .08em;
-    text-transform: uppercase; color: var(--green);
-    margin-bottom: 18px; padding-bottom: 12px;
-    border-bottom: 1px solid var(--green-lt);
-  }
-  .card-title .icon {
-    width: 28px; height: 28px; border-radius: 8px;
-    background: var(--green-lt); display: grid; place-items: center;
-    font-size: 14px;
-  }
+.loc-btn {
+  display:flex; align-items:center; gap:8px; width:100%; padding:12px 16px;
+  background:var(--gl); color:var(--g); border:1.5px dashed rgba(26,107,58,.3); border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600;
+  cursor:pointer; transition:all .2s; margin-bottom:8px;
+}
+.loc-btn:hover { background:#d1fae5; border-style:solid; }
+.pulse { width:8px; height:8px; border-radius:50%; background:var(--g); animation:pu 1.5s ease infinite; }
+#locationText { font-size:12px; color:var(--mu); text-align:center; min-height:18px; }
+#locationText a { color:var(--g); font-weight:500; }
 
-  /* ── Floating label inputs ── */
-  .field {
-    position: relative; margin-bottom: 14px;
-  }
-  .field input,
-  .field textarea,
-  .field select {
-    width: 100%;
-    padding: 14px 14px 6px;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px; color: var(--ink);
-    background: var(--cream);
-    outline: none;
-    transition: border-color .2s, box-shadow .2s, background .2s;
-    appearance: none;
-  }
-  .field textarea {
-    padding-top: 20px; resize: vertical; min-height: 90px;
-  }
-  .field label {
-    position: absolute; left: 14px; top: 50%;
-    transform: translateY(-50%);
-    font-size: 13px; color: var(--muted);
-    pointer-events: none;
-    transition: all .2s ease;
-  }
-  .field textarea ~ label { top: 16px; transform: none; }
+.pc {
+  display:flex; align-items:center; justify-content:space-between; padding:14px 16px;
+  border-radius:10px; background:var(--cr); border:1.5px solid var(--bd); margin-bottom:10px; transition:border-color .2s;
+}
+.pc:hover { border-color:var(--g); }
+.pn { font-size:14px; font-weight:500; color:var(--ink); }
+.ps { font-size:11px; color:var(--mu); }
+.qc { display:flex; align-items:center; background:var(--wh); border:1.5px solid var(--bd); border-radius:99px; overflow:hidden; }
+.qb { width:36px; height:36px; border:none; background:transparent; font-size:18px; color:var(--g); cursor:pointer; font-weight:300; transition:background .15s; display:grid; place-items:center; }
+.qb:hover { background:var(--gl); }
+.qv { min-width:32px; text-align:center; font-size:15px; font-weight:600; color:var(--ink); }
 
-  .field input:focus,
-  .field textarea:focus,
-  .field select:focus {
-    border-color: var(--green);
-    background: var(--white);
-    box-shadow: 0 0 0 3px rgba(26,107,58,.08);
-  }
-  .field input:focus ~ label,
-  .field input:not(:placeholder-shown) ~ label,
-  .field textarea:focus ~ label,
-  .field textarea:not(:placeholder-shown) ~ label {
-    top: 8px; transform: none; font-size: 10px; font-weight: 600;
-    color: var(--green); letter-spacing: .04em;
-  }
-  .field input::placeholder,
-  .field textarea::placeholder { color: transparent; }
+.ig { display:flex; gap:8px; margin-bottom:14px; }
+.io {
+  flex:1; text-align:center; padding:12px 4px; border:1.5px solid var(--bd); border-radius:10px;
+  cursor:pointer; transition:all .2s; background:var(--cr); font-size:12px; font-weight:500; color:var(--mu); user-select:none;
+}
+.io .em { font-size:22px; display:block; margin-bottom:4px; }
+.io.sh { border-color:#ef4444; background:#fff5f5; color:#ef4444; }
+.io.sw2{ border-color:#f59e0b; background:#fffbeb; color:#d97706; }
+.io.sc { border-color:#3b82f6; background:#eff6ff; color:#2563eb; }
 
-  /* Select styling */
-  .select-wrap { position: relative; margin-bottom: 14px; }
-  .select-wrap::after {
-    content: "▾"; position: absolute; right: 14px; top: 50%;
-    transform: translateY(-50%); font-size: 14px; color: var(--muted);
-    pointer-events: none;
-  }
-  .select-wrap select {
-    width: 100%; padding: 13px 36px 13px 14px;
-    border: 1.5px solid var(--border); border-radius: 10px;
-    font-family: 'DM Sans', sans-serif; font-size: 14px;
-    color: var(--ink); background: var(--cream);
-    appearance: none; cursor: pointer; outline: none;
-    transition: border-color .2s, box-shadow .2s;
-  }
-  .select-wrap select:focus {
-    border-color: var(--green);
-    box-shadow: 0 0 0 3px rgba(26,107,58,.08);
-    background: var(--white);
-  }
-  .select-label {
-    font-size: 11px; font-weight: 600; color: var(--muted);
-    letter-spacing: .06em; text-transform: uppercase; margin-bottom: 5px;
-  }
-  .field-extra { margin-bottom: 14px; }
-  .field-extra input {
-    width: 100%; padding: 13px 14px;
-    border: 1.5px solid var(--border); border-radius: 10px;
-    font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink);
-    background: var(--cream); outline: none;
-    transition: border-color .2s, box-shadow .2s;
-    animation: slideDown .2s ease;
-  }
-  .field-extra input:focus {
-    border-color: var(--amber); background: var(--white);
-    box-shadow: 0 0 0 3px rgba(217,119,6,.08);
-  }
+.save-btn {
+  width:100%; padding:16px; background:linear-gradient(135deg,var(--gm),var(--g));
+  color:var(--wh); border:none; border-radius:12px; font-family:'DM Sans',sans-serif;
+  font-size:15px; font-weight:600; letter-spacing:.04em; cursor:pointer;
+  box-shadow:0 4px 20px rgba(26,107,58,.35); transition:all .2s; margin-top:6px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  animation:fu .5s .35s ease both;
+}
+.save-btn:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(26,107,58,.4); }
+.save-btn:active { transform:translateY(0); }
+.save-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
 
-  .hidden { display: none !important; }
-  .error-field {
-    border-color: #ef4444 !important;
-    background: #fff5f5 !important;
-  }
+/* Setup banner */
+.setup-banner {
+  background:#fef3c7; border:1.5px solid #fcd34d; border-radius:10px;
+  padding:14px 16px; margin-bottom:14px; font-size:13px; color:#92400e; line-height:1.7;
+}
+.setup-banner strong { display:block; font-size:13px; margin-bottom:4px; }
+.setup-banner code { background:rgba(0,0,0,.07); padding:2px 6px; border-radius:4px; font-size:11px; }
+.setup-banner ol { margin-left:18px; margin-top:6px; }
+.setup-banner li { margin-bottom:3px; }
 
-  /* ── Location button ── */
-  .loc-btn {
-    display: flex; align-items: center; gap: 8px;
-    width: 100%; padding: 12px 16px;
-    background: var(--green-lt); color: var(--green);
-    border: 1.5px dashed rgba(26,107,58,.3); border-radius: 10px;
-    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
-    cursor: pointer; transition: all .2s; margin-bottom: 8px;
-  }
-  .loc-btn:hover { background: #d1fae5; border-style: solid; }
-  .loc-btn .pulse {
-    width: 8px; height: 8px; border-radius: 50%; background: var(--green);
-    animation: pulse 1.5s ease infinite;
-  }
-  #locationText {
-    font-size: 12px; color: var(--muted); text-align: center;
-    min-height: 18px;
-  }
-  #locationText a { color: var(--green); font-weight: 500; }
+/* Shops list */
+.list-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.list-count  { font-size:12px; color:var(--mu); }
+.search-box  {
+  width:100%; padding:11px 14px; border:1.5px solid var(--bd); border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:13px; color:var(--ink);
+  background:var(--wh); outline:none; margin-bottom:14px; transition:border-color .2s;
+}
+.search-box:focus { border-color:var(--g); box-shadow:0 0 0 3px rgba(26,107,58,.08); }
+.si {
+  background:var(--wh); border-radius:12px; padding:16px; margin-bottom:10px;
+  border:1px solid var(--bd); box-shadow:0 1px 8px rgba(26,107,58,.05); animation:fu .3s ease;
+}
+.si-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+.si-name { font-size:15px; font-weight:600; color:var(--ink); }
+.si-own  { font-size:12px; color:var(--mu); margin-top:2px; }
+.bp { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+.pill {
+  font-size:11px; font-weight:500; padding:3px 10px; border-radius:99px;
+  border:1px solid var(--bd); color:var(--mu); background:var(--cr);
+}
+.pill.hot  { background:#fff5f5; border-color:#fca5a5; color:#dc2626; }
+.pill.warm { background:#fffbeb; border-color:#fcd34d; color:#b45309; }
+.pill.cold { background:#eff6ff; border-color:#93c5fd; color:#1d4ed8; }
+.pill.qty  { background:var(--gl); border-color:rgba(26,107,58,.2); color:var(--g); }
+.si-meta { font-size:11px; color:var(--mu); margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; }
+.si-notes { font-size:12px; color:var(--mu); margin-top:8px; padding-top:8px; border-top:1px solid var(--bd); }
+.del-btn {
+  background:none; border:1px solid #fca5a5; color:#ef4444;
+  border-radius:7px; padding:4px 10px; font-size:11px; cursor:pointer;
+  transition:all .2s; font-family:'DM Sans',sans-serif; white-space:nowrap;
+}
+.del-btn:hover { background:#fff5f5; }
+.empty { text-align:center; padding:50px 20px; color:var(--mu); }
+.empty .ei { font-size:40px; margin-bottom:12px; }
+.empty p   { font-size:13px; }
+.loading-txt { text-align:center; padding:30px; color:var(--mu); font-size:13px; }
 
-  /* ── Product quantity ── */
-  .product-card {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 16px; border-radius: 10px;
-    background: var(--cream); border: 1.5px solid var(--border);
-    margin-bottom: 10px; transition: border-color .2s;
-  }
-  .product-card:hover { border-color: var(--green); }
-  .product-info { display: flex; flex-direction: column; gap: 2px; }
-  .product-name { font-size: 14px; font-weight: 500; color: var(--ink); }
-  .product-sub  { font-size: 11px; color: var(--muted); }
-  .qty-controls {
-    display: flex; align-items: center; gap: 0;
-    background: var(--white); border: 1.5px solid var(--border);
-    border-radius: 99px; overflow: hidden;
-  }
-  .qty-btn {
-    width: 36px; height: 36px; border: none; background: transparent;
-    font-size: 18px; color: var(--green); cursor: pointer; font-weight: 300;
-    transition: background .15s; display: grid; place-items: center;
-  }
-  .qty-btn:hover { background: var(--green-lt); }
-  .qty-val {
-    min-width: 32px; text-align: center;
-    font-size: 15px; font-weight: 600; color: var(--ink);
-  }
+.toast {
+  position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--ink); color:#fff; padding:14px 24px; border-radius:99px;
+  font-size:13px; font-weight:500; white-space:nowrap; opacity:0;
+  transition:all .3s ease; pointer-events:none; z-index:999;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-  /* ── Row layout ── */
-  .row { display: flex; gap: 10px; }
-  .row > * { flex: 1; }
-
-  /* ── Interest level ── */
-  .interest-group {
-    display: flex; gap: 8px; margin-bottom: 14px;
-  }
-  .interest-opt {
-    flex: 1; text-align: center; padding: 12px 4px;
-    border: 1.5px solid var(--border); border-radius: 10px;
-    cursor: pointer; transition: all .2s; background: var(--cream);
-    font-size: 12px; font-weight: 500; color: var(--muted);
-    user-select: none;
-  }
-  .interest-opt .emoji { font-size: 22px; display: block; margin-bottom: 4px; }
-  .interest-opt.selected-hot   { border-color: #ef4444; background: #fff5f5; color: #ef4444; }
-  .interest-opt.selected-warm  { border-color: #f59e0b; background: #fffbeb; color: #d97706; }
-  .interest-opt.selected-cold  { border-color: #3b82f6; background: #eff6ff; color: #2563eb; }
-
-  /* ── Save button ── */
-  .save-btn {
-    width: 100%; padding: 16px;
-    background: linear-gradient(135deg, var(--green-mid) 0%, var(--green) 100%);
-    color: var(--white); border: none; border-radius: 12px;
-    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
-    letter-spacing: .04em; cursor: pointer;
-    box-shadow: 0 4px 20px rgba(26,107,58,.35);
-    transition: all .2s; margin-top: 6px;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    animation: fadeUp .5s .35s ease both;
-  }
-  .save-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(26,107,58,.4);
-  }
-  .save-btn:active { transform: translateY(0); }
-
-  /* ── Success toast ── */
-  .toast {
-    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
-    background: var(--ink); color: #fff; padding: 14px 24px;
-    border-radius: 99px; font-size: 13px; font-weight: 500;
-    white-space: nowrap; opacity: 0;
-    transition: all .3s ease; pointer-events: none; z-index: 999;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* ── Animations ── */
-  @keyframes fadeDown {
-    from { opacity: 0; transform: translateY(-16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: .5; transform: scale(1.5); }
-  }
+@keyframes fd { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fu { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
+@keyframes sd { from{opacity:0;transform:translateY(-6px)}  to{opacity:1;transform:translateY(0)} }
+@keyframes pu { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.5)} }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
-  <div class="badge">🌿 Gudup Sales Onboarding</div>
-  <h1>Add New Shop</h1>
-  <p>Fill in the details to register a new retail partner</p>
+  <div class="badge-top">🌿 Sales Onboarding</div>
+  <h1>Shop Manager</h1>
+  <p>Add and track your retail partners</p>
 </div>
 
-<!-- SHOP DETAILS -->
-<div class="card">
-  <div class="card-title"><div class="icon">🏪</div> Shop Details</div>
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('add')">➕ Add Shop</button>
+  <button class="tab"        onclick="switchTab('list')">📋 View Shops</button>
+</div>
 
-  <div class="field">
-    <input type="text" id="shopName" placeholder=" ">
-    <label>Shop Name *</label>
+<!-- ══ ADD FORM ══ -->
+<div id="addView">
+
+  <div class="setup-banner" id="setupBanner">
+    <strong>⚙️ One-time Firebase Setup (free, 5 min)</strong>
+    <ol>
+      <li>Go to <strong>console.firebase.google.com</strong> → Create project</li>
+      <li>Add a Web App → copy the <code>firebaseConfig</code> object</li>
+      <li>Open this HTML file → find <code>firebaseConfig</code> near top → paste your values</li>
+      <li>In Firebase Console → Firestore Database → Create → Start in test mode</li>
+      <li>Save & reopen — your shops will save to Firebase automatically ✅</li>
+    </ol>
   </div>
-  <div class="field">
-    <input type="text" id="ownerName" placeholder=" ">
-    <label>Owner Name *</label>
+
+  <div class="card">
+    <div class="ct"><div class="ic">🏪</div> Shop Details</div>
+    <div class="field"><input type="text" id="shopName" placeholder=" "><label>Shop Name *</label></div>
+    <div class="field"><input type="text" id="ownerName" placeholder=" "><label>Owner Name *</label></div>
+    <div class="row">
+      <div class="field"><input type="tel" id="mobile" maxlength="10" placeholder=" "><label>Mobile *</label></div>
+      <div class="field"><input type="tel" id="altMobile" maxlength="10" placeholder=" "><label>Alternate No.</label></div>
+    </div>
+    <div class="field"><textarea id="address" placeholder=" "></textarea><label>Address (Area + Pincode) *</label></div>
+    <button class="loc-btn" onclick="getLocation()"><div class="pulse"></div> Capture GPS Location</button>
+    <p id="locationText"></p>
   </div>
-  <div class="row">
+
+  <div class="card">
+    <div class="ct"><div class="ic">🏷️</div> Shop Type</div>
+    <div class="sl">Category</div>
+    <div class="sw"><select id="shopTypeSelect" onchange="handleOther(this,'shopTypeOther')">
+      <option>Kirana Store</option><option>Dairy Shop</option>
+      <option>Supermarket</option><option>Sweet Shop</option>
+      <option>Hotel</option><option>Other</option>
+    </select></div>
+    <div class="ef hidden" id="shopTypeOther"><input type="text" placeholder="Describe shop type…"></div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><div class="ic">🧈</div> Product Interest</div>
+    <div class="pc">
+      <div><div class="pn">Premium Ghee</div><div class="ps">1 Litre Jar</div></div>
+      <div class="qc">
+        <button class="qb" onclick="changeQty('g1',-1)">−</button>
+        <span class="qv" id="g1">0</span>
+        <button class="qb" onclick="changeQty('g1',1)">+</button>
+      </div>
+    </div>
+    <div class="pc">
+      <div><div class="pn">Premium Ghee</div><div class="ps">500 ml Jar</div></div>
+      <div class="qc">
+        <button class="qb" onclick="changeQty('g2',-1)">−</button>
+        <span class="qv" id="g2">0</span>
+        <button class="qb" onclick="changeQty('g2',1)">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><div class="ic">📦</div> Order Preference</div>
+    <div class="sl">Order Frequency</div>
+    <div class="sw"><select id="orderSelect" onchange="handleOther(this,'orderOther')">
+      <option>Daily</option><option>Alternate Days</option><option>Weekly</option><option>Other</option>
+    </select></div>
+    <div class="ef hidden" id="orderOther"><input type="text" placeholder="Custom frequency…"></div>
+    <div class="sl" style="margin-top:4px">Delivery Time</div>
+    <div class="sw"><select id="deliverySelect" onchange="handleOther(this,'deliveryOther')">
+      <option>Morning (6–10 AM)</option><option>Afternoon (11–2 PM)</option>
+      <option>Evening (4–7 PM)</option><option>Other</option>
+    </select></div>
+    <div class="ef hidden" id="deliveryOther"><input type="text" placeholder="Preferred time…"></div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><div class="ic">💳</div> Payment</div>
+    <div class="sl">Payment Type</div>
+    <div class="sw"><select id="paymentSelect" onchange="handleOther(this,'paymentOther')">
+      <option>Cash</option><option>UPI</option><option>Credit</option><option>Other</option>
+    </select></div>
+    <div class="ef hidden" id="paymentOther"><input type="text" placeholder="Payment method…"></div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><div class="ic">📊</div> Interest Level</div>
+    <div class="ig">
+      <div class="io" onclick="selInt('hot',this)"><span class="em">🔥</span>Hot</div>
+      <div class="io" onclick="selInt('warm',this)"><span class="em">🙂</span>Warm</div>
+      <div class="io" onclick="selInt('cold',this)"><span class="em">❄️</span>Cold</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct"><div class="ic">📝</div> Notes</div>
     <div class="field">
-      <input type="tel" id="mobile" maxlength="10" placeholder=" ">
-      <label>Mobile *</label>
+      <textarea id="notes" placeholder=" " style="min-height:90px"></textarea>
+      <label>Additional notes or remarks…</label>
     </div>
-    <div class="field">
-      <input type="tel" id="altMobile" maxlength="10" placeholder=" ">
-      <label>Alternate No.</label>
-    </div>
-  </div>
-  <div class="field">
-    <textarea id="address" placeholder=" "></textarea>
-    <label>Address (Area + Pincode) *</label>
   </div>
 
-  <button class="loc-btn" onclick="getLocation()">
-    <div class="pulse"></div>
-    Capture GPS Location
-  </button>
-  <p id="locationText"></p>
+  <button class="save-btn" id="saveBtn" onclick="saveData()">✓ &nbsp;Save Shop</button>
 </div>
 
-<!-- SHOP TYPE -->
-<div class="card">
-  <div class="card-title"><div class="icon">🏷️</div> Shop Type</div>
-  <div class="select-label">Category</div>
-  <div class="select-wrap">
-    <select id="shopTypeSelect" onchange="handleOther(this,'shopTypeOther')">
-      <option>Kirana Store</option>
-      <option>Dairy Shop</option>
-      <option>Supermarket</option>
-      <option>Sweet Shop</option>
-      <option>Hotel</option>
-      <option>Other</option>
-    </select>
-  </div>
-  <div class="field-extra hidden" id="shopTypeOther">
-    <input type="text" placeholder="Describe shop type…">
+<!-- ══ SHOPS LIST ══ -->
+<div id="shopsView" style="display:none">
+  <div class="card" style="animation-delay:0s">
+    <div class="list-header">
+      <div class="ct" style="margin:0;padding:0;border:none"><div class="ic">🏪</div>All Shops</div>
+      <span class="list-count" id="shopsCount"></span>
+    </div>
+    <input type="text" class="search-box" id="searchInput"
+           placeholder="🔍  Search by name, owner, mobile…" oninput="filterShops()">
+    <div id="shopsList"><div class="loading-txt">⏳ Loading…</div></div>
   </div>
 </div>
 
-<!-- PRODUCTS -->
-<div class="card">
-  <div class="card-title"><div class="icon">🧈</div> Product Interest</div>
-
-  <div class="product-card">
-    <div class="product-info">
-      <span class="product-name">Premium Ghee</span>
-      <span class="product-sub">1 Litre Jar</span>
-    </div>
-    <div class="qty-controls">
-      <button class="qty-btn" onclick="changeQty('g1',-1)">−</button>
-      <span class="qty-val" id="g1">0</span>
-      <button class="qty-btn" onclick="changeQty('g1',1)">+</button>
-    </div>
-  </div>
-
-  <div class="product-card">
-    <div class="product-info">
-      <span class="product-name">Premium Ghee</span>
-      <span class="product-sub">500 ml Jar</span>
-    </div>
-    <div class="qty-controls">
-      <button class="qty-btn" onclick="changeQty('g2',-1)">−</button>
-      <span class="qty-val" id="g2">0</span>
-      <button class="qty-btn" onclick="changeQty('g2',1)">+</button>
-    </div>
-  </div>
-</div>
-
-<!-- ORDER PREFERENCES -->
-<div class="card">
-  <div class="card-title"><div class="icon">📦</div> Order Preference</div>
-
-  <div class="select-label">Order Frequency</div>
-  <div class="select-wrap">
-    <select id="orderSelect" onchange="handleOther(this,'orderOther')">
-      <option>Daily</option>
-      <option>Alternate Days</option>
-      <option>Weekly</option>
-      <option>Other</option>
-    </select>
-  </div>
-  <div class="field-extra hidden" id="orderOther">
-    <input type="text" placeholder="Custom frequency…">
-  </div>
-
-  <div class="select-label" style="margin-top:4px">Delivery Time</div>
-  <div class="select-wrap">
-    <select id="deliverySelect" onchange="handleOther(this,'deliveryOther')">
-      <option>Morning (6–10 AM)</option>
-      <option>Afternoon (11–2 PM)</option>
-      <option>Evening (4–7 PM)</option>
-      <option>Other</option>
-    </select>
-  </div>
-  <div class="field-extra hidden" id="deliveryOther">
-    <input type="text" placeholder="Preferred time…">
-  </div>
-</div>
-
-<!-- PAYMENT -->
-<div class="card">
-  <div class="card-title"><div class="icon">💳</div> Payment</div>
-  <div class="select-label">Payment Type</div>
-  <div class="select-wrap">
-    <select id="paymentSelect" onchange="handleOther(this,'paymentOther')">
-      <option>Cash</option>
-      <option>UPI</option>
-      <option>Credit</option>
-      <option>Other</option>
-    </select>
-  </div>
-  <div class="field-extra hidden" id="paymentOther">
-    <input type="text" placeholder="Payment method…">
-  </div>
-</div>
-
-<!-- INTEREST LEVEL -->
-<div class="card">
-  <div class="card-title"><div class="icon">📊</div> Interest Level</div>
-  <div class="interest-group">
-    <div class="interest-opt" onclick="selectInterest('hot', this)">
-      <span class="emoji">🔥</span> Hot
-    </div>
-    <div class="interest-opt" onclick="selectInterest('warm', this)">
-      <span class="emoji">🙂</span> Warm
-    </div>
-    <div class="interest-opt" onclick="selectInterest('cold', this)">
-      <span class="emoji">❄️</span> Cold
-    </div>
-  </div>
-</div>
-
-<!-- NOTES -->
-<div class="card">
-  <div class="card-title"><div class="icon">📝</div> Notes</div>
-  <div class="field">
-    <textarea id="notes" placeholder=" " style="min-height:100px"></textarea>
-    <label>Additional notes or remarks…</label>
-  </div>
-</div>
-
-<!-- SAVE -->
-<button class="save-btn" onclick="saveData()">
-  ✓ &nbsp;Save Shop
-</button>
-
-<!-- TOAST -->
-<div class="toast" id="toast">✅ Shop saved successfully!</div>
-
+<div class="toast" id="toast"></div>
 
 <script>
-  let selectedInterest = null;
-  let shopLocation     = null;
+  let selInterest = null, shopLoc = null, allShops = [];
 
-  function changeQty(id, delta) {
-    const el = document.getElementById(id);
-    const v  = Math.max(0, parseInt(el.innerText) + delta);
-    el.innerText = v;
-    el.closest('.product-card').style.borderColor = v > 0 ? 'var(--green)' : '';
+  /* ── Firebase check ── */
+  document.addEventListener('fb-ready', () => {
+    document.getElementById('setupBanner').style.display = 'none';
+  });
+
+  /* ── Tabs ── */
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===(tab==='add'?0:1)));
+    document.getElementById('addView').style.display   = tab==='add'  ? 'block':'none';
+    document.getElementById('shopsView').style.display = tab==='list' ? 'block':'none';
+    if (tab==='list') loadShops();
   }
 
-  function handleOther(select, wrapperId) {
-    const wrap = document.getElementById(wrapperId);
-    if (select.value === 'Other') {
-      wrap.classList.remove('hidden');
-      wrap.querySelector('input').focus();
-    } else {
-      wrap.classList.add('hidden');
-      wrap.querySelector('input').value = '';
+  /* ── Qty ── */
+  function changeQty(id, d) {
+    const el=document.getElementById(id), v=Math.max(0,parseInt(el.innerText)+d);
+    el.innerText=v;
+    el.closest('.pc').style.borderColor=v>0?'var(--g)':'';
+  }
+
+  /* ── Other toggle ── */
+  function handleOther(sel,id) {
+    const w=document.getElementById(id);
+    if (sel.value==='Other') { w.classList.remove('hidden'); w.querySelector('input').focus(); }
+    else { w.classList.add('hidden'); w.querySelector('input').value=''; }
+  }
+
+  /* ── Interest ── */
+  function selInt(lvl,el) {
+    selInterest=lvl;
+    document.querySelectorAll('.io').forEach(o=>o.className='io');
+    el.classList.add(lvl==='hot'?'sh':lvl==='warm'?'sw2':'sc');
+  }
+
+  /* ── GPS ── */
+  function getLocation() {
+    const btn=document.querySelector('.loc-btn');
+    if (!navigator.geolocation){alert("Geolocation not supported");return;}
+    btn.innerHTML='⏳ &nbsp;Fetching…';
+    navigator.geolocation.getCurrentPosition(p=>{
+      shopLoc={lat:p.coords.latitude,lon:p.coords.longitude};
+      btn.innerHTML='<span style="font-size:16px">✅</span>&nbsp; Location Captured';
+      btn.style.borderStyle='solid';
+      document.getElementById('locationText').innerHTML=
+        `<a href="https://www.google.com/maps?q=${shopLoc.lat},${shopLoc.lon}" target="_blank">📍 View on Google Maps</a>`;
+    },()=>{
+      btn.innerHTML='<div class="pulse"></div> Capture GPS Location';
+      alert("Location access denied.");
+    });
+  }
+
+  /* ── Validate ── */
+  function validate() {
+    let ok=true;
+    ['shopName','ownerName','mobile','address'].forEach(id=>{
+      const el=document.getElementById(id), v=el.value.trim();
+      const bad=id==='mobile'?!/^[0-9]{10}$/.test(v):!v;
+      el.classList.toggle('err',bad);
+      if(bad) ok=false;
+    });
+    return ok;
+  }
+
+  /* ── Get select value ── */
+  function getVal(selId,othId) {
+    const s=document.getElementById(selId);
+    if(s.value==='Other'){
+      const v=document.getElementById(othId).querySelector('input').value.trim();
+      return v||'Other';
+    }
+    return s.value;
+  }
+
+  /* ── Save to Firestore ── */
+  async function saveData() {
+    if (!validate()){showToast('⚠️ Please fill all required fields','#b91c1c');return;}
+    if (!window._fbOk){showToast('⚠️ Firebase not configured — see setup steps','#b45309');return;}
+    const btn=document.getElementById('saveBtn');
+    btn.disabled=true; btn.textContent='⏳  Saving…';
+    const data={
+      shopName:   document.getElementById('shopName').value.trim(),
+      ownerName:  document.getElementById('ownerName').value.trim(),
+      mobile:     document.getElementById('mobile').value.trim(),
+      altMobile:  document.getElementById('altMobile').value.trim(),
+      address:    document.getElementById('address').value.trim(),
+      location:   shopLoc||null,
+      shopType:   getVal('shopTypeSelect','shopTypeOther'),
+      ghee1L:     parseInt(document.getElementById('g1').innerText),
+      ghee500ml:  parseInt(document.getElementById('g2').innerText),
+      orderFreq:  getVal('orderSelect','orderOther'),
+      deliveryTime:getVal('deliverySelect','deliveryOther'),
+      paymentType:getVal('paymentSelect','paymentOther'),
+      interest:   selInterest||'Not Set',
+      notes:      document.getElementById('notes').value.trim(),
+      createdAt:  window._ts()
+    };
+    try {
+      await window._add(window._col(window._db,'shops'),data);
+      showToast('✅ Shop saved to Firebase!','#1a6b3a');
+      resetForm();
+    } catch(e) {
+      console.error(e);
+      showToast('❌ Save failed: '+e.message,'#b91c1c');
+    } finally {
+      btn.disabled=false; btn.innerHTML='✓ &nbsp;Save Shop';
     }
   }
 
-  function selectInterest(level, el) {
-    selectedInterest = level;
-    document.querySelectorAll('.interest-opt').forEach(o => {
-      o.className = 'interest-opt';
-    });
-    el.classList.add(`selected-${level}`);
+  /* ── Reset ── */
+  function resetForm() {
+    ['shopName','ownerName','mobile','altMobile','address','notes'].forEach(id=>document.getElementById(id).value='');
+    ['g1','g2'].forEach(id=>{document.getElementById(id).innerText='0';});
+    document.querySelectorAll('.pc').forEach(c=>c.style.borderColor='');
+    document.querySelectorAll('.io').forEach(o=>o.className='io');
+    document.querySelectorAll('.err').forEach(e=>e.classList.remove('err'));
+    ['shopTypeOther','orderOther','deliveryOther','paymentOther'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    document.getElementById('locationText').innerHTML='';
+    document.querySelector('.loc-btn').innerHTML='<div class="pulse"></div> Capture GPS Location';
+    document.querySelector('.loc-btn').style.borderStyle='';
+    selInterest=null; shopLoc=null;
+    window.scrollTo({top:0,behavior:'smooth'});
   }
 
-  function getLocation() {
-    const btn = document.querySelector('.loc-btn');
-    if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
-    btn.textContent = '⏳  Fetching location…';
-    navigator.geolocation.getCurrentPosition(pos => {
-      const { latitude: lat, longitude: lon } = pos.coords;
-      shopLocation = { lat, lon };
-      const link = `https://www.google.com/maps?q=${lat},${lon}`;
-      btn.innerHTML = '<span style="color:var(--green);font-size:18px">✓</span> Location Captured';
-      btn.style.borderStyle = 'solid';
-      document.getElementById('locationText').innerHTML =
-        `<a href="${link}" target="_blank">📍 View on Google Maps</a>`;
-    }, () => {
-      btn.innerHTML = '<div class="pulse"></div> Capture GPS Location';
-      alert("Location access denied. Please enable location permissions.");
-    });
-  }
-
-  function setError(el, state) {
-    el.classList.toggle('error-field', state);
-  }
-
-  function saveData() {
-    const shopName  = document.getElementById('shopName');
-    const ownerName = document.getElementById('ownerName');
-    const mobile    = document.getElementById('mobile');
-    const address   = document.getElementById('address');
-
-    let valid = true;
-
-    [shopName, ownerName, mobile, address].forEach(f => setError(f, false));
-
-    if (!shopName.value.trim())                   { setError(shopName, true);  valid = false; }
-    if (!ownerName.value.trim())                  { setError(ownerName, true); valid = false; }
-    if (!/^[0-9]{10}$/.test(mobile.value.trim())) { setError(mobile, true);   valid = false; }
-    if (!address.value.trim())                    { setError(address, true);   valid = false; }
-
-    if (!valid) {
-      showToast('⚠️  Please fill all required fields', '#b91c1c');
+  /* ── Load Shops ── */
+  async function loadShops() {
+    const list=document.getElementById('shopsList');
+    list.innerHTML='<div class="loading-txt">⏳ Loading shops…</div>';
+    if (!window._fbOk) {
+      list.innerHTML='<div class="empty"><div class="ei">⚙️</div><p>Firebase not configured yet.<br>Follow setup steps in Add Shop tab.</p></div>';
       return;
     }
-
-    showToast('✅  Shop saved successfully!', '#1a6b3a');
+    try {
+      const snap=await window._get(window._q(window._col(window._db,'shops'),window._ob('createdAt','desc')));
+      allShops=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderShops(allShops);
+    } catch(e) {
+      list.innerHTML=`<div class="empty"><div class="ei">❌</div><p>${e.message}</p></div>`;
+    }
   }
 
-  function showToast(msg, bg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.style.background = bg || '#1c1917';
+  /* ── Render ── */
+  function renderShops(shops) {
+    document.getElementById('shopsCount').textContent=`${shops.length} shop${shops.length!==1?'s':''}`;
+    const list=document.getElementById('shopsList');
+    if (!shops.length) {
+      list.innerHTML='<div class="empty"><div class="ei">🏪</div><p>No shops added yet.<br>Add your first shop!</p></div>';
+      return;
+    }
+    list.innerHTML=shops.map(s=>{
+      const ic=s.interest==='hot'?'hot':s.interest==='warm'?'warm':s.interest==='cold'?'cold':'';
+      const ie=s.interest==='hot'?'🔥':s.interest==='warm'?'🙂':s.interest==='cold'?'❄️':'';
+      const qty=[];
+      if(s.ghee1L>0) qty.push(`${s.ghee1L}×1L`);
+      if(s.ghee500ml>0) qty.push(`${s.ghee500ml}×500ml`);
+      const mapL=s.location?`<span><a href="https://www.google.com/maps?q=${s.location.lat},${s.location.lon}" target="_blank" style="color:var(--g);font-weight:500">📍 Map</a></span>`:'';
+      return `<div class="si">
+        <div class="si-top">
+          <div><div class="si-name">${s.shopName}</div><div class="si-own">👤 ${s.ownerName} &nbsp;•&nbsp; 📞 ${s.mobile}</div></div>
+          <button class="del-btn" onclick="deleteShop('${s.id}')">🗑 Delete</button>
+        </div>
+        <div class="bp">
+          <span class="pill">${s.shopType}</span>
+          ${ic?`<span class="pill ${ic}">${ie} ${s.interest.charAt(0).toUpperCase()+s.interest.slice(1)}</span>`:''}
+          ${qty.length?`<span class="pill qty">🧈 ${qty.join(', ')}</span>`:''}
+          ${s.paymentType?`<span class="pill">💳 ${s.paymentType}</span>`:''}
+          ${s.orderFreq?`<span class="pill">📦 ${s.orderFreq}</span>`:''}
+        </div>
+        <div class="si-meta"><span>📍 ${s.address}</span>${mapL}</div>
+        ${s.notes?`<div class="si-notes">📝 ${s.notes}</div>`:''}
+      </div>`;
+    }).join('');
+  }
+
+  /* ── Filter ── */
+  function filterShops() {
+    const q=document.getElementById('searchInput').value.toLowerCase();
+    renderShops(!q?allShops:allShops.filter(s=>
+      (s.shopName||'').toLowerCase().includes(q)||(s.ownerName||'').toLowerCase().includes(q)||
+      (s.mobile||'').includes(q)||(s.address||'').toLowerCase().includes(q)
+    ));
+  }
+
+  /* ── Delete ── */
+  async function deleteShop(id) {
+    if (!confirm('Delete this shop?')) return;
+    try {
+      await window._del(window._ref(window._db,'shops',id));
+      allShops=allShops.filter(s=>s.id!==id);
+      filterShops();
+      showToast('🗑 Shop deleted','#78716c');
+    } catch(e) { showToast('❌ Delete failed','#b91c1c'); }
+  }
+
+  /* ── Toast ── */
+  function showToast(msg,bg) {
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.style.background=bg||'#1c1917';
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3200);
+    setTimeout(()=>t.classList.remove('show'),3200);
   }
 </script>
 </body>
