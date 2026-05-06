@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add New Shop</title>
+
+<style>
+body { font-family: Arial; background:#f5f5f5; margin:0; }
+.container { max-width:400px; margin:auto; background:#fff; padding:16px; }
+
+h2 { color:green; }
+
+input, select, textarea {
+    width:100%; padding:10px; margin:6px 0;
+    border:1px solid #ccc; border-radius:6px;
+}
+
+.section { margin-top:16px; font-weight:bold; }
+
+.qty-box {
+    display:flex; justify-content:space-between;
+    align-items:center; margin-bottom:10px;
+}
+
+.qty-controls button { padding:6px 10px; }
+
+.btn {
+    width:100%; background:green; color:white;
+    padding:14px; border:none; border-radius:8px;
+    font-size:16px; cursor:pointer;
+}
+
+.hidden { display:none; }
+
+.error { border:2px solid red; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🏪 Add New Shop</h2>
+
+<!-- SHOP DETAILS -->
+<div class="section">Shop Details</div>
+
+<input id="shopName" placeholder="Shop Name *">
+<input id="ownerName" placeholder="Owner Name *">
+<input id="mobile" placeholder="Mobile Number *">
+<input id="altMobile" placeholder="Alternate Number">
+<input id="address" placeholder="Address (Area + Pincode) *">
+
+<button class="btn" onclick="getLocation()">📍 Capture Location</button>
+<p id="locationText" style="font-size:12px;color:gray;"></p>
+
+<!-- SHOP TYPE -->
+<div class="section">Shop Type</div>
+
+<select onchange="handleOther(this, 'shopTypeOther')">
+    <option>Kirana Store</option>
+    <option>Dairy Shop</option>
+    <option>Supermarket</option>
+    <option>Sweet Shop</option>
+    <option>Hotel</option>
+    <option>Other</option>
+</select>
+
+<input id="shopTypeOther" class="hidden" placeholder="Enter shop type">
+
+<!-- PRODUCT -->
+<div class="section">Product Interest</div>
+
+<div class="qty-box">
+    <span>Ghee 1 Liter</span>
+    <div class="qty-controls">
+        <button onclick="changeQty('g1', -1)">-</button>
+        <span id="g1">0</span>
+        <button onclick="changeQty('g1', 1)">+</button>
+    </div>
+</div>
+
+<div class="qty-box">
+    <span>Ghee 500 ml</span>
+    <div class="qty-controls">
+        <button onclick="changeQty('g2', -1)">-</button>
+        <span id="g2">0</span>
+        <button onclick="changeQty('g2', 1)">+</button>
+    </div>
+</div>
+
+<!-- ORDER -->
+<div class="section">Order Preference</div>
+
+<select onchange="handleOther(this, 'orderOther')">
+    <option>Daily</option>
+    <option>Alternate</option>
+    <option>Weekly</option>
+    <option>Other</option>
+</select>
+<input id="orderOther" class="hidden" placeholder="Enter custom frequency">
+
+<select onchange="handleOther(this, 'deliveryOther')">
+    <option>Morning</option>
+    <option>Afternoon</option>
+    <option>Evening</option>
+    <option>Other</option>
+</select>
+<input id="deliveryOther" class="hidden" placeholder="Enter delivery time">
+
+<!-- PAYMENT -->
+<div class="section">Payment Type</div>
+
+<select onchange="handleOther(this, 'paymentOther')">
+    <option>Cash</option>
+    <option>UPI</option>
+    <option>Credit</option>
+    <option>Other</option>
+</select>
+<input id="paymentOther" class="hidden" placeholder="Enter payment type">
+
+<!-- INTEREST -->
+<div class="section">Interest Level</div>
+
+<select onchange="handleOther(this, 'interestOther')">
+    <option>Hot 🔥</option>
+    <option>Warm 🙂</option>
+    <option>Cold ❄️</option>
+    <option>Other</option>
+</select>
+<input id="interestOther" class="hidden" placeholder="Enter interest level">
+
+<!-- NOTES -->
+<div class="section">Notes</div>
+<textarea id="notes" placeholder="Enter notes..."></textarea>
+
+<!-- SAVE -->
+<button class="btn" onclick="saveData()">SAVE SHOP</button>
+
+</div>
+
+<script>
+
+// Quantity
+function changeQty(id, value) {
+    let el = document.getElementById(id);
+    let current = parseInt(el.innerText);
+    el.innerText = Math.max(0, current + value);
+}
+
+// Show "Other"
+function handleOther(select, inputId) {
+    let input = document.getElementById(inputId);
+    if (select.value === "Other") {
+        input.classList.remove("hidden");
+    } else {
+        input.classList.add("hidden");
+        input.value = "";
+    }
+}
+
+// Location
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+        alert("Geolocation not supported");
+    }
+}
+
+function showPosition(position) {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    const mapLink = `https://www.google.com/maps?q=${lat},${lon}`;
+
+    document.getElementById("locationText").innerHTML =
+        `<a href="${mapLink}" target="_blank">View Location on Map</a>`;
+
+    window.shopLocation = { lat, lon };
+}
+
+function showError(error) {
+    alert("Location access failed");
+}
+
+// Validation
+function saveData() {
+
+    let shopName = document.getElementById("shopName");
+    let ownerName = document.getElementById("ownerName");
+    let mobile = document.getElementById("mobile");
+    let address = document.getElementById("address");
+
+    // Reset errors
+    [shopName, ownerName, mobile, address].forEach(f => f.classList.remove("error"));
+
+    let valid = true;
+
+    if (!shopName.value.trim()) {
+        shopName.classList.add("error");
+        valid = false;
+    }
+
+    if (!ownerName.value.trim()) {
+        ownerName.classList.add("error");
+        valid = false;
+    }
+
+    if (!/^[0-9]{10}$/.test(mobile.value.trim())) {
+        mobile.classList.add("error");
+        valid = false;
+    }
+
+    if (!address.value.trim()) {
+        address.classList.add("error");
+        valid = false;
+    }
+
+    if (!valid) {
+        alert("Please fill all required fields correctly");
+        return;
+    }
+
+    alert("✅ Shop Saved Successfully!");
+}
+
+</script>
+
+</body>
+</html>
