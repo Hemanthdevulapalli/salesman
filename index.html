@@ -228,6 +228,20 @@ body {
 }
 .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
+.header {
+  position: relative;
+  text-align: center; /* keeps everything centered */
+}
+
+.logo-top-left {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 37px;
+  height: 37px;
+  object-fit: contain;
+}
+
 @keyframes fd { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
 @keyframes fu { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
 @keyframes sd { from{opacity:0;transform:translateY(-6px)}  to{opacity:1;transform:translateY(0)} }
@@ -237,9 +251,15 @@ body {
 <body>
 
 <div class="header">
-  <div class="badge-top">🌿Gudup Sales Onboarding</div>
+
+  <!-- Logo (top-left, independent) -->
+  <img src="./images/gudup_logo.png" class="logo-top-left" alt="Gudup Logo">
+
+  <!-- Centered content (unchanged alignment) -->
+  <div class="badge-top">Gudup Sales Onboarding</div>
   <h1>Shop Manager</h1>
   <p>Add and track your retail partners</p>
+
 </div>
 
 <div class="tabs">
